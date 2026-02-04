@@ -1,6 +1,10 @@
 import 'dart:io';
 
 void main() {
+  calcImc();
+}
+
+calcImc() {
   print("===== Digite seu peso =====");
   var textPeso = stdin.readLineSync();
   var peso = double.parse(textPeso!);
