@@ -4,6 +4,7 @@ void main() {
   calculoImc();
 }
 
+//Programa que calcula o IMC
 calculoImc() {
   print("===== Digite seu peso =====");
   String? textPeso = stdin.readLineSync();
@@ -18,10 +19,12 @@ calculoImc() {
   imprimirResultado(imc);
 }
 
+//Função que recebe altura e peso e retorna o valor do IMC
 double calcImc(double peso, double altura) {
   return peso / (altura * altura);
 }
 
+//Imprime o resultado de acordo com o valor de IMC recebido
 imprimirResultado(double calcImc) {
   print('=============================');
 
