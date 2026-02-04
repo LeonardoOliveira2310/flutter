@@ -13,8 +13,13 @@ calcImc() {
   var textAltura = stdin.readLineSync();
   var altura = double.parse(textAltura!);
 
-  print('=============================');
   var calcImc = peso / (altura * altura);
+
+  imprimirResultado(calcImc);
+}
+
+imprimirResultado(calcImc) {
+  print('=============================');
 
   if (calcImc < 18.5) {
     print('Abaixo do peso');
