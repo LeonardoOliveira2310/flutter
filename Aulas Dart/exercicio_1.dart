@@ -10,9 +10,13 @@ void main() {
   var input = stdin.readLineSync();
   var idade = int.parse(input!);
 
-  if (idade >= 18) {
-    print("Você é maior de idade");
+  if (idade >= 50) {
+    print("Melhor Idade");
+  } else if (idade >= 18) {
+    print("Tu ainda é Adulto");
+  } else if (idade >= 12) {
+    print("Aborrecente");
   } else {
-    print("Tu ainda é menor de idade");
+    print("fraldinha");
   }
 }
