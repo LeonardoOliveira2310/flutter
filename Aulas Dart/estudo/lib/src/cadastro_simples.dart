@@ -2,7 +2,7 @@ import 'dart:io';
 
 List<Map<String, dynamic>> cadastros = [];
 
-void main() {
+cadastrarPessoa() {
   bool condicao = true;
   limparTerminal();
   var comandos = {"1": "cadastro", "2": "imprimir", "3": "sair"};
