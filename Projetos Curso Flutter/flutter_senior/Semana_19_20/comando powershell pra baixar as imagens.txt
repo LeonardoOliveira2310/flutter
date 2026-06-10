@@ -1,0 +1,4 @@
+$names = "avatar_1","avatar_2","avatar_3","avatar_4","avatar_5","avatar_6","avatar_7","thumbnail_1"
+foreach ($name in $names) {
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/flutter/codelabs/main/animated-responsive-layout/step_04/assets/$name.png" -OutFile "$name.png"
+}

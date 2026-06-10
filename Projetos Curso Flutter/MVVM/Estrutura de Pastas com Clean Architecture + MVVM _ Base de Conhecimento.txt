@@ -1,0 +1,601 @@
+Clean Architecture + MVVM 
+A união da Clean Architecture com o padrão MVVM (Model-View-ViewModel) forma o que é chamado na engenharia de software de "Arquitetura à Prova de Balas".
+
+O Clean Architecture cuida da parte macro do aplicativo ( organiza e se protege ), o MVVM cuida da parte micro ( como a interface se comporta e se atualiza ).
+
+5 Princípios Fundamentais 
+1. A Regra da Dependência 
+O fluxo de dependência sempre aponta para o centro.
+
+O centro é o seu Domínio (Entidades e Casos de Uso). Ele não depende de nada, não importa bibliotecas externas e é escrito em Dart puro.
+
+A UI (MVVM) e a camada de Data (Bancos/APIs) são meros "detalhes" que orbitam o centro. O Domínio dita as regras, e as pontas obedecem.
+
+2. Separação de Responsabilidades 
+Cada ator tem um papel microscópico e não deve invadir o palco do outro:
+
+View (Tela): É completamente "burra". Ela só sabe desenhar botões, capturar toques e mostrar cores.
+
+ViewModel (Maestro da Tela): Guarda o estado (variáveis) e repassa as ordens da View para o Domínio. Ela não conhece o banco de dados e não desenha widgets.
+
+Use Case (O Gerente): Conhece as regras de negócio. Ele não sabe o que é um botão e não sabe o que é uma query SQL.
+
+Repository/DataSource (O Operário): Faz requisições de rede ou salva no disco. Não toma decisões lógicas.
+
+3. Reatividade Passiva 
+No padrão MVVM, a View nunca pergunta qual é o dado atual; ela simplesmente observa.
+A ViewModel atualiza uma variável e grita para quem quiser ouvir: "Meu estado mudou!" ( usando o notifyListeners() ). A View, que estava escutando passivamente, reconstrói seus pixels automaticamente.
+
+4. Inversão de Controle 
+Como as camadas externas podem conversar com as internas sem criar um acoplamento destrutivo? Através de Interfaces.
+
+O Domínio nunca diz: "Vou usar a classe FirebaseDataSource()". Ele diz: "Eu preciso de um contrato chamado IAuthRepository(). Não me importo quem vai implementar isso, desde que me tragam os dados".
+Isso permite que você troque o banco de dados inteiro do aplicativo sem que a regra de negócio perceba.
+
+5. Testabilidade Extrema e Isolada 
+O maior princípio e objetivo final dessa arquitetura é a garantia de qualidade corporativa. Como tudo está isolado e se comunica por contratos, você consegue testar cada pedaço de forma independente.
+
+Estrutura de pastas
+
+lib/
+│
+├── data/
+│   ├── dao/                                                    # Lógica pura de banco de dados local    
+│   │   └── <dao_class> .dart                                       
+│   ├── data_sources/                                           # Conversando diretamente com a infraestrutura externa (APIs, bancos de dados locais ou hardwares) 
+|   |   |                                                       para ler ou escrever dados brutos.
+│   │   └── <data_sources_class> .dart        
+│   ├── repositories/                                           # Implementações das Interfaces / Contratos de repositórios
+|   |   └──<repository_class> .dart
+│   ├── services/                                               # Implementações das Interfaces / Contratos de serviços
+|   |   └──<services_class> .dart
+│   └── model/                                                  # (MODEL_DTO) Classes com implentações mais "sujas", recebe valores de API / DataBase
+|       └──<model_dto_class> .dart
+|
+├── dependency_injection/                                    
+│   └── factories/                                              # Local onde serão criado as Factories que cria a instancia de sua viewmodel para sua screen
+|
+├── domain/  
+│   ├── enum/                                                   
+│   ├── use_cases/                                              # Orquestrar o fluxo de informações para executar uma única regra de negócio ou ação específica do sistema.
+│   ├── repositories/                                           # Interfaces / Contratos de repositórios
+|   |   └──<i_repository_class> .dart                           
+│   ├── services/                                               # Interfaces / Contratos de serviços
+|   |   └──<i_services_class> .dart                             
+│   └── models/                                                 # (MODEL_ENTITY) Classes somente com dados que são importantes para a camada DOMAIN
+|       └──<model_entity_class> .dart                           
+|
+├── ui/     
+│   ├── core/                                                   # Arquivos compartilhados por todas camada UI
+│   │   ├── widgets/                                                 # Widgets genéricos usados em várias features
+|   │   │   └── <shared widgets>                                # Botões customizados, text fields, loaders, etc.
+│   |   ├── models/                                             # (MODEL_UI) Classes somente com dados que são importantes para a UI
+│   |   │   └──<model_ui_class> .dart
+│   │   └── themes/                                             # Configuração de tema claro/escuro
+|   |
+│   └── <feature_name>/                                         # (VIEW) Interface do usuário
+|       |── <feature_name>_screen.dart                          # Telas inteiras
+|       |── <feature_name>_action.dart                          # ( Opcional ) Lógica específica de UI de botões
+|       |
+│       ├── view_models/                                        # View Model não deve importar nada de UI ( Ex: flutter/material.dart ) 
+|       |    |── <feature_view_model_class> .dart               # Funções e lógica (O ChangeNotifier principal)
+|       |    └── <feature_state> .dart                          # Apenas variáveis, getters e setters
+|       |
+│       ├── models/                                             # (MODEL_UI) Classes somente com dados que são importantes para a UI
+│       │   └──<model_ui_class> .dart
+|       |
+│       └── widgets/                                            # Componentes menores específicos desta feature
+|           └── <other_widgets>                                 
+│ 
+|
+├── config/   
+├── utils/                                                      # Funções utilitárias e formatadores (ex: date_formatter.dart)
+├── routing/   
+├── main_staging.dart
+├── main_development.dart
+├── main.dart                                                   # Ponto de entrada do aplicativo
+│
+├── test/      
+|   ├── data/  
+|   ├── domain/ 
+|   ├── ui/                     
+│   └── utils/                       
+│       
+└── testing/      
+    ├── fakes/  
+    └── models/ 
+
+ANEXO 1 - [IMAGEM DE EXEMPLO]
+
+Código Mermaid
+
+sequenceDiagram
+    autonumber
+    actor Usuario as Usuário
+    participant Roteador as Routing
+    participant Factory as DI/Factory
+    
+    box rgb(240, 248, 255) Camada UI (Presentation)
+        participant View as Screen (View)
+        participant VM as ViewModel
+    end
+    
+    box rgb(240, 255, 240) Camada Domain (Regras)
+        participant UC as Use Case
+    end
+    
+    box rgb(255, 245, 240) Camada Data (Infra)
+        participant Repo as Repository
+        participant DS as DataSource / DAO
+    end
+
+    %% ==========================================
+    %% FASE 1: MONTAGEM E INJEÇÃO (BOTTOM-UP)
+    %% ==========================================
+    rect rgb(220, 230, 240)
+        note right of Roteador: FASE 1: Construção & Injeção (Antes da tela abrir)
+        Roteador->>Factory: Solicita a Tela (ex: LoginFactory.build())
+        
+        note right of Factory: A Factory monta de "baixo para cima"
+        Factory->>DS: 1. Instancia o DataSource / DAO
+        Factory->>Repo: 2. Instancia o Repository injetando (DataSource/DAO)
+        Factory->>UC: 3. Instancia o Use Case injetando (Repository)
+        Factory->>VM: 4. Instancia a ViewModel injetando (Use Case)
+        Factory->>View: 5. Instancia a Screen injetando (ViewModel)
+        
+        Factory-->>Roteador: Retorna a Screen 100% montada
+        Roteador-->>Usuario: Exibe a tela inicial no celular
+    end
+
+    %% ==========================================
+    %% FASE 2: EXECUÇÃO DO FLUXO (TOP-DOWN E RETORNO)
+    %% ==========================================
+    rect rgb(230, 245, 230)
+        note right of Usuario: FASE 2: Ação do Usuário (Busca de Dados)
+        Usuario->>View: Toca no botão "Buscar Dados"
+        
+        View->>VM: Chama o método (ex: buscarDados())
+        VM->>View: notifyListeners() -> View desenha o [Loading Spinner]
+        
+        VM->>UC: Invoca o Use Case: call(params)
+        note right of UC: Valida Regras de Negócio (ex: Parâmetros válidos?)
+        
+        UC->>Repo: Solicita os dados pela Interface (obterDados)
+        note right of Repo: Define a estratégia (Vai na API ou no SQLite?)
+        
+        Repo->>DS: Delega o trabalho sujo (fetchApi / queryDb)
+        note right of DS: Executa requisição HTTP ou SQL
+        
+        DS-->>Repo: Retorna DTO (Objeto Sujo/JSON)
+        
+        note right of Repo: Alfândega: Traduz o DTO para Entity pura
+        Repo-->>UC: Retorna Entity de Domínio
+        
+        note right of UC: Aplica Regras Matemáticas/Finais na Entity
+        UC-->>VM: Retorna o Resultado da Operação
+        
+        note right of VM: Atualiza variáveis de estado
+        VM->>View: notifyListeners() -> Remove Loading, prepara os dados
+        
+        View-->>Usuario: Desenha a tela atualizada com os dados!
+    end
+
+Repositório de exemplo 
+Caso necessite de um projeto de exemplo será disponibilizado através do seguinte ANEXO 2 - [REPOSITÓRIO]
+
+DATA 
+Local onde o aplicativo suja as "mãos", aqui onde seu projeto trabalha com internet, banco de dados, arquivos do dispositivo e APIs que retornam JSONs desorganizados
+
+A regra:
+
+A camada data/ conhece a camada de domain/ ( Dominio ).
+Aqui importamos os contratos ( Interfaces ) e as entidades da domain para satisfaze-lo, blindando o resto do projeto.
+DTOs - Data Transfer Objects 
+Camada: data/model/
+
+Aqui vivem os modelos "sujos". Diferente da Entidade de Domínio (que é pura e cheia de regras), o DTO é apenas um reflexo exato de como o dado vem de fora (da API ou do Banco SQL).
+
+A única responsabilidade dele é saber conversar com o mundo externo (APIs em JSON, Firebase, tabelas do SQLite).
+
+Ele permite variáveis nulas (pois a API pode falhar), anotações de serialização e nomes esquisitos que vêm do banco.
+
+O que faz: Mapeia chaves de JSON esquisitas ("usr_nm_full") para variáveis Dart. Permite variáveis nulas (String?), pois a API pode falhar e mandar dados incompletos.
+
+Exemplo: ( Um UsuarioDTO que tem os métodos fromJson e toJson )
+
+class UsuarioDTO {
+  final int idDb;
+  final String nmFull;
+
+  UsuarioDTO({required this.idDb, required this.nmFull});
+
+  factory UsuarioDTO.fromJson(Map<String, dynamic> json){
+    return UsuarioDTO(
+        idDb: json['id_api'] ?? 0,
+        nmFull: json['nome_api'] ?? "",
+    );
+  }
+}
+
+DTO para Entidade: Nunca deixe um objeto sujo de JSON vazar para o seu domínio. O Repositório sempre deve fazer essa tradução.
+
+Data Source 
+Camada: data/data_sources/
+
+Esta pasta é a porta de saída do seu app para a internet.
+
+O que faz: Contém classes que usam pacotes como http, dio ou firebase. A única responsabilidade de um Data Source é bater em um endpoint, pegar a resposta (String/JSON), converter para um DTO e devolver.
+
+O que NÃO faz: Não toma decisões se o usuário tem saldo ou não. Se a API retornar erro 404, o Data Source apenas lança uma ServerException e deixa o Repositório se virar.
+
+DAO - Data Access Object 
+Camada: data/dao/
+
+Data Access Object (Objeto de Acesso a Dados). É o equivalente ao Data Source, mas para o armazenamento offline.
+
+*Obs: a camada dao é para apenas banco de dados local, caso seja um banco online sua regra deverá ser criado na camada data_source
+
+O que faz: Contém as lógicas de pacotes como sqflite, floor, hive ou shared_preferences. Ele escreve e lê tabelas físicas no celular do usuário.
+
+Padrão: Ele recebe DTOs para salvar no banco e retorna DTOs quando você faz um SELECT.
+
+Todo arquivo DAO deve ter um contrato, e sua implementação deve ficar na mesma camada que o contrato
+
+data/dao/i_meu_dao.dart: O contrato que garante como o banco deve se comportar.
+
+data/dao/meu_dao_impl.dart: O código que realmente roda os comandos SQL.
+
+Services (Data) 
+Camada: data/services/
+
+Enquanto os Repositórios lidam com "Dados de Negócio" (Usuários, Produtos, Projetos), os Services lidam com Capacidades do Dispositivo.
+
+Infraestrutura
+Hardware do dispositivo
+SDK de terceiros
+(Não envolve banco de dados)
+O que faz: Implementa as interfaces i_services do Domínio. É aqui que você coloca a lógica para acessar o GPS (Geolocator), a Câmera, o Leitor de Código de Barras, etc...
+
+Repositories (Data) 
+Camada: data/repositories/
+
+Esta é a pasta mais importante de toda a camada data/. O Repositório é a "Cérebro" da camada data/, ele não suja as mãos fazendo requisições, banco de dados. Ele orquestra quem faz isso.
+
+O que faz: Implementa as interfaces i_repositories do Domínio. Ele orquestra os DAOs e Data Sources.
+
+O que ele NÃO faz: Ele não constrói URLs de API e não monta queries SQL (SELECT * FROM...). Ele apenas chama os métodos do Data Source e do DAO.
+
+Tradução: O Domínio pede uma Entidade pura. O Repositório pede o dado sujo para o Data Source (que devolve um DTO). O Repositório então pega esse DTO, limpa ele, valida e transforma em uma Entidade de Domínio antes de entregar para o Use Case.
+
+O que não fazer 
+Ter regras matemáticas
+O repositório não deve executar nenhuma validação matemática. ( Ex: Não deve aplicar descontos )
+O Data Source não pode validar se um CPF é matematicamente correto.
+Apenas deve ocorrer a transição de dados, quem deve aplicar cálculos é a camada de Domínio.
+
+Conhecer a UI
+A camada data/ não pode conhecer o que é Flutter, não devesse importar import 'package:flutter/material.dart';.
+Se ocorrer algum erro apenas se dispara um throw Exception() para o UseCase (domain/use_case/) , que deve repassar para a ViewModel, que avisa a Screen/View para tratar o erro.
+Passar DTOs para o Domínio
+Um Caso de Uso (Use Case) NUNCA deve receber um objeto que termine com ...DTO. O Repositório tem a obrigação absoluta de converter o UsuarioDTO em Usuario (Entity) antes de devolver.
+DI - Dependency Injection ou Injeção de Dependência 
+Camada: di/
+
+Aqui vamos optar por não utilizar SDK de terceiros para fazer a injeção dependência, vamos optar pela injeção Manual via Factories
+
+A Anatomia de uma Factory Manual
+
+A função de uma Factory é montar as peças de baixo para cima (da infraestrutura mais profunda até a interface visual) e entregar a Screen pronta para o Roteador do Flutter exibir.
+
+Veja o passo a passo da montagem para a nossa tela de Login:
+
+Camada Data (Fundações): Instancia DAOs e Data Sources.
+
+Camada Data (Pontes): Instancia Repositórios injetando os Data Sources do passo 1.
+
+Camada Domain (Regras): Instancia os Use Cases injetando os Repositórios do passo 2.
+
+Camada UI (Cérebro da Tela): Instancia a ViewModel injetando os Use Cases do passo 3.
+
+Camada UI (Visão): Instancia a Screen injetando a ViewModel do passo 4.
+
+No final retornando sua Screen
+
+import 'package:flutter/material.dart';
+// import '../../data/data_sources/auth_remote_data_source_impl.dart';
+// import '../../data/repositories/auth_repository_impl.dart';
+// import '../../domain/use_cases/realizar_login_use_case.dart';
+// import '../../ui/login/view_models/login_view_model.dart';
+// import '../../ui/login/login_screen.dart';
+
+class LoginFactory {
+  // Evita que a classe seja instanciada, pois usaremos apenas um método estático
+  LoginFactory._();
+
+
+  /// Método estático que retorna a tela 100% montada com todas as injeções prontas
+  static Widget build() {
+    // 5. Instancia e retorna a Screen (UI), passando a ViewModel
+    return LoginScreen(
+      viewModelBuilder: () {
+        // 1. Instancia o mais baixo nível (Data Sources / APIs)
+        // Se precisasse do pacote "http" ou "dio", ele seria injetado aqui.
+        final authRemoteDataSource = AuthRemoteDataSourceImpl();
+    
+        // 2. Instancia o Repositório (Data)
+        final authRepository = AuthRepositoryImpl(
+          remoteDataSource: authRemoteDataSource,
+        );
+    
+        // 3. Instancia o(s) Caso(s) de Uso (Domain)
+        final realizarLoginUseCase = RealizarLoginUseCase(
+          authRepository: authRepository,
+        );
+
+        // 4. Instancia a ViewModel (UI)
+        return LoginViewModel(
+             realizarLoginUseCase, // O Use Case é injetado manualmente aqui!
+           );
+      },
+      actionBuilder: (viewModel) {
+        return LoginAction(viewModel: viewModel);
+      }
+    );
+  }
+}
+
+Utilizar os parâmetros criados pela factory:
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({
+    required LoginViewModel Function() viewModelBuilder,
+    required LoginAction Function(LoginViewModel) actionBuilder,
+    super.key,
+  })  : _viewModelBuilder = viewModelBuilder,
+        _actionBuilder = actionBuilder;
+
+  final LoginViewModel Function() _viewModelBuilder;
+
+  final LoginAction Function(LoginViewModel) _actionBuilder;
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  late final LoginViewModel _viewModel;
+  late final LoginAction _action;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = widget._viewModelBuilder();
+    _action = widget._actionBuilder(_viewModel);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _viewModel.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Widget();
+  }
+}
+
+Consumo:
+
+import 'package:flutter/material.dart';
+import '../di/factories/login_factory.dart';
+// import '../di/factories/home_factory.dart';
+
+class AppRoutes {
+  static const String login = '/login';
+  static const String home = '/home';
+
+  static Route<dynamic> gerarRotas(RouteSettings settings) {
+    switch (settings.name) {
+      
+      case login:
+        // O Roteador só chama a Factory. Toda a injeção acontece de forma isolada!
+        final screen = LoginFactory.build();
+        return MaterialPageRoute(builder: (_) => screen);
+        
+      case home:
+        // return MaterialPageRoute(builder: (_) => HomeFactory.build());
+        
+      default:
+        return MaterialPageRoute(
+          builder: (_) => const Scaffold(
+            body: Center(child: Text('Rota não encontrada')),
+          ),
+        );
+    }
+  }
+}
+
+Domain 
+A camada de Domínio é o coração puro da sua aplicação. Ela dita O QUE o sistema faz, quais são as suas REGRAS, e não faz a menor ideia de COMO isso é mostrado na tela ou COMO isso é salvo no banco de dados.
+
+Regra da Dependência:
+
+O Domínio não depende de absolutamente NADA. Ele não importa nada da camada ui/, não importa nada da camada data/ e, o mais importante, não importa o Flutter ( zero material.dart ).
+
+Entity - As Entidades de Negócio 
+Camada: domain/model/
+
+Diferente dos DTOs (que são cópias sujas do banco de dados) e dos UI Models (que são maquiagens para a tela), a Entidade é a verdade absoluta da sua regra de negócio. Ela não sabe o que é JSON e não sabe o que é Flutter.
+
+Ela guarda os dados puros, não permite nulidades indesejadas e contém as regras lógicas de negócio. O Repositório (na camada data) é quem converte o DTO para a Entidade.
+
+O que faz: Guarda os dados essenciais e as regras matemáticas ou lógicas inerentes a esse dado.
+
+class UsuarioEntity {
+  final int id;
+  final String nome;
+
+  UsuarioEntity({
+    required this.id, 
+    required this.nome,
+});
+
+bool get assinaturaValida {
+    if (id == 0) return false;
+    return true;
+}
+
+}
+
+Repositories (Data) 
+Camada: data/repositories/
+
+Esta é a pasta mais importante de toda a camada data/. O Repositório é a "Cérebro" da camada data/, ele não suja as mãos fazendo requisições, banco de dados. Ele orquestra quem faz isso.
+
+O que faz: Implementa as interfaces i_repositories do Domínio. Ele orquestra os DAOs e Data Sources.
+
+O que ele NÃO faz: Ele não constrói URLs de API e não monta queries SQL (SELECT * FROM...). Ele apenas chama os métodos do Data Source e do DAO.
+
+Tradução: O Domínio pede uma Entidade pura. O Repositório pede o dado sujo para o Data Source (que devolve um DTO). O Repositório então pega esse DTO, limpa ele, valida e transforma em uma Entidade de Domínio antes de entregar para o Use Case.
+
+Repositories (Domain) 
+Camada: domain/repositories/
+
+O Domínio não sabe conversar com o SQLite ou com a API REST, mas ele precisa dos dados.
+
+Como? Criando Interfaces (Contratos).
+
+O que faz: O Domínio dita as regras do jogo. Ele cria uma classe abstrata (IUsuarioRepository) dizendo: "Eu não sei quem vai fazer isso, mas eu exijo que alguém me traga uma Lista de Usuários".
+
+É essa interface que a camada data/repositories/ vai ser obrigada a implementar. O Domínio manda, a camada data/ obedece.
+
+Services (Domain) 
+Camada: domain/services/
+
+Mesmo conceito dos repositórios, mas focado em capacidades de hardware e sistema operacional (GPS, Arquivos, Câmera, Notificações).
+
+Infraestrutura
+Hardware do dispositivo
+SDK de terceiros
+(Não envolve banco de dados)
+O que faz: O Domínio cria a interface IArquivosService exigindo um método deletarArquivo(). Ele não sabe se é Android ou iOS, ele apenas confia que a camada data vai providenciar a implementação correta.
+
+Use Case 
+Camada: domain/use_case/
+
+Os Casos de Uso são os roteiristas. Eles pegam as Entidades (models/), usam os Contratos (repositories/ e services/) e criam um fluxo lógico perfeito (ex: "Buscar usuário, verificar nível de assinatura, mandar email de cobrança, salvar no banco").
+
+Seu use case deve seguir o Princípio da Responsabilidade Única (o "S" do Princípio SOLID), seu use case deve fazer apenas uma ação seguindo sua regra de negócio.
+
+Sua classe de use case deve ser "Gritante", o nome da sua classe deve ser a ação que ela faz ( Ex: FinalizarCompraUsecase()) e apenas um método que normalmente é usado como execute() ou call()
+
+Seu use case GerenciaUsuarioUsecase() não deve conter outros métodos além do principal (Ex: atualizarUsuario(), excluirUsuario()).
+
+Quando ele pode ter mais de 1 método?
+
+Pode - se e devesse criar mais de um método quando seu use_case for muito grande e não for possível diminuir em use_cases menores. Porém deve - se criar métodos privados _metodoPrivado() onde ele só pode ser chamada dentro da própria classe.
+
+Enum 
+Camada: domain/enum/
+
+O que faz: Define as categorias reais do seu negócio (StatusPagamento.aprovado, CategoriaDiretorio.imagens). Eles servem para que o Use Case não precise ficar lidando com Strings soltas, o que causaria erros de digitação e bugs invisíveis.
+
+UI 
+Na Clean Architecture + MVVM (Model-View-ViewModel), a regra desta camada é: Ela é "burra" para regras de negócio, mas "genial" para desenhar pixels e capturar toques do usuário.
+
+É exclusivamente nesta pasta que o Flutter existe. É o único lugar do projeto inteiro onde você tem permissão para usar import 'package:flutter/material.dart';, conhecer o BuildContext, lidar com animações, cores e navegação.
+
+Core 
+Camada: ui/core/
+
+Esta é a fundação visual do aplicativo. Nada aqui é específico de uma única tela.
+
+widgets/: Seus widgets genéricos. Um botão personalizado, um textField personalizado, etc.
+themes/: A definição de cores , tipografia e o ThemeData claro/escuro.
+utils/: Ajudantes visuais, como um DialogHelper que recebe o BuildContext para mostrar alertas padronizados.
+<feature_name> 
+Camada: ui/<feature_name>/
+
+Em vez de colocar todas as telas em uma pasta e todos os ViewModels em outra, agrupamos por contexto. Se a feature é login/, tudo que o Login precisa para ser desenhado mora lá dentro.
+
+Dentro de cada feature, a tríade do MVVM acontece:
+
+models 
+Se a tela precisa de dados muito específicos de formatação (como datas em formato de texto amigável ou controle de seleção visual), criamos um modelo exclusivo para a UI consumir ( Ex: Usuario_Model_Ui() ), mantendo a Entidade de Domínio intacta.
+
+view_models 
+A ViewModel é o maestro da interface. Ela não desenha nada (não tem Widgets), mas ela dita o que deve ser desenhado.
+
+Responsabilidade: Ela escuta os toques do usuário, traduz isso em chamadas para os Use Cases do Domínio, recebe as respostas, e atualiza as suas variáveis de estado.
+Regra: Usamos o ChangeNotifier puro do Flutter. Quando o estado muda, ela grita notifyListeners().
+O que não fazer: Na viewModel não deve-se importar nada do Flutter flutter/material.dart
+Mas e quanto a TextControllers e outros?
+
+Criamos eles na screen e apenas os valores passamos para uma váriavel String na nossa viewModel ( Ou outro tipo primitivo do dart ).
+
+*Obs: Sempre adicione na sua screen o dispose da sua viewModel, pois se você não descartar sua viewModel ao fechar uma screen ocorrerá vazamento de memória, deixando dispositivos antigos lentos
+
+ @override
+  void dispose() {
+    super.dispose();
+    _viewModel.dispose();
+  }
+
+state 
+Um state acompanha a viewModel sendo um mixin para ela. Utilizado apenas para organizar suas váriaveis, gets e sets entre outras regras de atualização de estado.
+
+<feature_name>_screen.dart 
+A tela é puramente reativa. Ela "assiste" a ViewModel. Se a ViewModel diz que isLoading é verdadeiro, a tela desenha um CircularProgressIndicator. Se é falso, ela desenha o botão. A tela não toma decisões, ela apenas obedece ao estado.
+
+Model 
+Camada: ui/model/
+
+Por que a tela não deveria consumir a Entidade direto?
+
+Às vezes, a tela precisa de informações que não são regras de negócio, mas sim regras visuais.
+
+Por exemplo:
+
+Um texto de data formatado ("12 de Março de 2026");
+Uma cor baseada no status;
+Um booleano isSelected para saber se o card está clicado.
+O domínio não deve saber sobre formatação de texto ou cliques em cards.
+
+A ViewModel pega a Entidade e a converte em um UI Model mastigado para a tela.
+
+Quando usar um ui_model?
+
+Entidade para UI Model:
+
+Se a sua tela for super simples e a Entidade já tiver exatamente o que a tela precisa desenhar, a ViewModel pode simplesmente entregar a Entidade para a View. Agora, se a sua tela tem formatações complexas de data, moeda, ou estados visuais interativos (como múltiplos itens selecionáveis numa lista), crie o UI Model sem medo.
+
+Utils 
+Camada: utils/
+
+A pasta utils/ é o local para código "solto" que não pertence a nenhuma funcionalidade específica, mas que ajuda o aplicativo inteiro a funcionar melhor. Se uma classe não é uma regra de negócio, não é um componente de tela e não faz requisição de dados, ela provavelmente é um utilitário.
+
+O que você DEVE colocar na pasta utils/:
+
+Formatadores: Classes que formatam CPF, CNPJ, Moeda, Data (ex: de DateTime para dd/MM/yyyy).
+Validadores Genéricos: Validadores de e-mail genéricos, checagem de strings vazias.
+Extensões (Extensions): Extensões do Dart para facilitar o dia a dia (ex: StringExtension para capitalizar a primeira letra).
+Mixins de Suporte: Como TratativaErrosMixin.
+Contratos / Interfaces 
+Onde os contratos de classes são necessários 
+Onde os contratos são ESSENCIAIS
+Você deve usar contratos (abstract class em Dart) sempre que precisar cruzar a fronteira da camada de Domain para a camada de Data.
+
+Repositories: Sim. A camada de domain deve definir o que precisa ser feito através de uma interface. A camada de data deve implementar como isso é feito.
+DataSources / DAOs: Altamente recomendado. Se o seu repositório consome uma API externa ou um banco local, criar um contrato para o DataSource/DAO facilita muito a criação de testes e a troca de tecnologias no futuro (ex: trocar o http pelo dio, ou sqflite por hive).
+
+Onde os contratos são DESNECESSÁRIOS
+No Dart, toda classe implementa implicitamente sua própria interface. Isso significa que você pode criar mocks de classes concretas em seus testes sem precisar criar uma interface explícita para elas.
+
+Screens (Views): Não. Widgets do Flutter são declarativos. Você os testa usando Widget Tests, não mockando a classe da tela.
+ViewModels: Não. A ViewModel já é a classe concreta que gerencia o estado daquela tela específica. Para testar a UI, você pode mockar a própria classe concreta da ViewModel.
+UseCases (Actions): Geralmente Não. Um UseCase geralmente possui apenas um método (ex: execute()). Criar uma interface para uma classe de um método só gera redundância. Você pode mockar a classe concreta no teste da ViewModel.
+Models / DTOs: Não. Eles são apenas estruturas de dados, não possuem comportamento complexo que precise ser abstraído.
+
+
+
