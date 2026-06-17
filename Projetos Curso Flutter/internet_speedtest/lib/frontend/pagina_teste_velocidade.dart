@@ -14,7 +14,6 @@ class PaginaTesteVelocidade extends StatefulWidget {
 }
 
 class _PaginaTesteVelocidadeState extends State<PaginaTesteVelocidade> {
-  //final LogImpl logModule = LogFirebase();
   SpeedometroNotifier speedometroNotifier = SpeedometroNotifier();
   FluxoTesteInternet fluxoTesteInternet = FluxoTesteInternet();
   ValidarFluxoTesteInternet validarFluxoTesteInternet =
@@ -35,7 +34,12 @@ class _PaginaTesteVelocidadeState extends State<PaginaTesteVelocidade> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        appBar: AppBar(title: const Text('Teste de Internet')),
+        appBar: AppBar(
+          title: const Text(
+            'DOWNLOAD SPEEDTEST',
+            style: TextStyle(color: Colors.cyanAccent),
+          ),
+        ),
         body: ListenableBuilder(
           listenable: speedometroNotifier,
           builder: (context, child) {
@@ -51,10 +55,10 @@ class _PaginaTesteVelocidadeState extends State<PaginaTesteVelocidade> {
                       : const ResultadoTeste(),
                   if (speedometroNotifier.testeInProgress) ...{
                     speedometroNotifier.testandoPing
-                        ? LoadingWidget()
+                        ? LoadingWidget(mensagem: 'Testando Ping')
                         : speedometroNotifier.downloadRate != 0
                         ? const SizedBox()
-                        : LoadingWidget(),
+                        : LoadingWidget(mensagem: 'Iniciando Teste'),
                   },
                 ],
               ),

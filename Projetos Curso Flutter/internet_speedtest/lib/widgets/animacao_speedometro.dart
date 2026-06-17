@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:internet_speedtest/backend/fluxo_teste_internet.dart';
 import 'package:internet_speedtest/backend/speedometro_notifier.dart';
-import 'package:internet_speedtest/widgets/speedometro.dart';
+import 'package:internet_speedtest/widgets/speed_gauge_widget.dart';
 
 class AnimacaoSpeedometro extends StatefulWidget {
   const AnimacaoSpeedometro({super.key});
@@ -29,10 +29,14 @@ class _AnimacaoSpeedometroState extends State<AnimacaoSpeedometro> {
               : 0.0,
           child: Column(
             children: [
-              Speedometro(
-                unitText: speedometroNotifier.unitText,
+              // Speedometro(
+              //   unitText: speedometroNotifier.unitText,
+              //   value: speedometroNotifier.downloadRate,
+              //   contex: context,
+              // ),
+              SpeedGaugeWidget(
                 value: speedometroNotifier.downloadRate,
-                contex: context,
+                unit: speedometroNotifier.unitText,
               ),
               SizedBox(
                 width: 280,
@@ -64,7 +68,6 @@ class _AnimacaoSpeedometroState extends State<AnimacaoSpeedometro> {
                         child: FittedBox(
                           child: Text(
                             "Cancelar",
-
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),

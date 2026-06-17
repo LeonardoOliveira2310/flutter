@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:internet_speedtest/backend/speedometro_notifier.dart';
 import 'package:internet_speedtest/backend/validar_fluxo_teste_internet.dart';
+import 'package:internet_speedtest/widgets/botao_reiniciar.dart';
 
 class ResultadoTeste extends StatefulWidget {
   const ResultadoTeste({super.key});
@@ -57,16 +58,22 @@ class _ResultadoTesteState extends State<ResultadoTeste> {
               ),
             ],
           ),
+          SizedBox(height: 16.0),
           speedometroNotifier.tempoDeTeste == 0
               ? const SizedBox()
-              : ElevatedButton(
-                  child: FittedBox(
-                    child: Text("Reiniciar", overflow: TextOverflow.ellipsis),
-                  ),
-                  onPressed: () {
+              : BotaoReiniciarTeste(
+                  onTap: () {
                     validarFluxoTesteInternet.iniciarFluxo(context);
                   },
                 ),
+          // ElevatedButton(
+          //     child: FittedBox(
+          //       child: Text("Reiniciar", overflow: TextOverflow.ellipsis),
+          //     ),
+          //     onPressed: () {
+          //       validarFluxoTesteInternet.iniciarFluxo(context);
+          //     },
+          //   ),
         ],
       ),
     );

@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 
 class LoadingWidget extends StatelessWidget {
-  const LoadingWidget({super.key});
+  const LoadingWidget({super.key, required this.mensagem});
+
+  final String mensagem;
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(),
           SizedBox(height: 16.0),
-          Text('Selecting Server...'),
+          Text('$mensagem...'),
         ],
       ),
     );

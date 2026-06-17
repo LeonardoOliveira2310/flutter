@@ -6,7 +6,6 @@ import 'package:internet_speedtest/backend/verificar_conexao.dart';
 class ValidarFluxoTesteInternet {
   SpeedometroNotifier speedometroNotifier = SpeedometroNotifier();
   FluxoTesteInternet fluxoTesteInternet = FluxoTesteInternet();
-  //TODO: Adicionar Firebase Crashlytics
   void iniciarFluxo(BuildContext context) async {
     bool temInternet = await verificarConexao();
 

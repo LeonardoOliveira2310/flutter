@@ -6,13 +6,11 @@ class SpeedGaugeWidget extends StatelessWidget {
     super.key,
     required this.value,
     required this.unit,
-    required this.pointerColor,
     this.enableLoadingAnimation = true,
   });
 
   final double value;
   final String unit;
-  final Color pointerColor;
   final bool enableLoadingAnimation;
 
   @override
@@ -37,11 +35,14 @@ class SpeedGaugeWidget extends StatelessWidget {
               ),
             ],
             pointers: [
-              NeedlePointer(value: value, enableAnimation: true),
+              NeedlePointer(
+                value: value,
+                enableAnimation: enableLoadingAnimation,
+              ),
               RangePointer(
                 value: value,
                 enableAnimation: true,
-                color: pointerColor,
+                color: Colors.cyanAccent,
               ),
             ],
             annotations: [
@@ -49,7 +50,7 @@ class SpeedGaugeWidget extends StatelessWidget {
                 widget: Padding(
                   padding: const EdgeInsets.only(top: 220),
                   child: Text(
-                    '$value $unit',
+                    '${value.toStringAsFixed(2)} $unit',
                     style: const TextStyle(
                       fontSize: 18.0,
                       fontWeight: FontWeight.bold,
