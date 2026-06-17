@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_internet_speed_test_pro/flutter_internet_speed_test_pro.dart';
+import 'package:mock_teste_internet/backend/speedometro_notifier.dart';
 import 'package:mock_teste_internet/widgets/speedometro.dart';
-import 'package:mock_teste_internet/notifiers/speedometro_notifier.dart';
 
 void main() {
   runApp(const MyApp());
@@ -47,7 +47,10 @@ class _MyAppState extends State<MyApp> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Speedometro(value: speedometroNotifier.downloadRate),
+                  Speedometro(
+                    value: speedometroNotifier.downloadRate,
+                    unitText: speedometroNotifier.unitText,
+                  ),
 
                   if (speedometroNotifier.progressoDownload > 0)
                     SizedBox(
