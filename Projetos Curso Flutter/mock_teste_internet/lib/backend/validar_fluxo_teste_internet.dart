@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mock_teste_internet/backend/fluxo_teste_internet.dart';
 import 'package:mock_teste_internet/backend/speedometro_notifier.dart';
+import 'package:mock_teste_internet/backend/verificar_conexao.dart';
 
 class ValidarFluxoTesteInternet {
   SpeedometroNotifier speedometroNotifier = SpeedometroNotifier();
@@ -8,8 +9,6 @@ class ValidarFluxoTesteInternet {
 
   void iniciarFluxo(BuildContext context) async {
     bool temInternet = await verificarConexao();
-
-    if (!context.mounted) return;
 
     speedometroNotifier.estaComInternet(temInternet);
 

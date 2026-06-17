@@ -32,7 +32,6 @@ class _AnimacaoSpeedometroState extends State<AnimacaoSpeedometro> {
               Speedometro(
                 unitText: speedometroNotifier.unitText,
                 value: speedometroNotifier.downloadRate,
-                contex: context,
               ),
               SizedBox(
                 width: 280,

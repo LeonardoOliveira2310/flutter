@@ -63,7 +63,7 @@ class _MyAppState extends State<MyApp> {
                               .noOverlay, // Remove o círculo de expansão ao clicar
                         ),
                         child: Slider(
-                          activeColor: Colors.green,
+                          activeColor: Colors.cyanAccent,
                           onChangeEnd: (value) =>
                               speedometroNotifier.progressoDeDownload('100'),
                           min: 0,
@@ -86,7 +86,7 @@ class _MyAppState extends State<MyApp> {
                                   fontWeight: FontWeight.bold,
                                   size: 35,
                                   Icons.arrow_circle_down_sharp,
-                                  color: Colors.green,
+                                  color: Colors.cyanAccent,
                                 ),
                                 Text(
                                   'DOWNLOAD ${speedometroNotifier.unitText} ',
